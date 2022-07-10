@@ -1,26 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import { CreatePetInput } from './dto/create-pet.input';
-import { UpdatePetInput } from './dto/update-pet.input';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Owner } from 'src/owners/entities/owner.entity';
+import { OwnersService } from 'src/owners/owners.service';
+import { Repository } from 'typeorm';
+import { CreatePetInput } from './dto/input/create-pet.input';
+import { UpdatePetInput } from './dto/input/update-pet.input';
+import { Pet } from './entities/pet.entity';
 
 @Injectable()
 export class PetsService {
+  constructor(
+    @InjectRepository(Pet) private petRepository: Repository<Pet>,
+    private ownersService: OwnersService,
+  ) {}
+
   create(createPetInput: CreatePetInput) {
-    return 'This action adds a new pet';
+    const newPet = this.petRepository.create(createPetInput);
+    return this.petRepository.save(newPet);
   }
 
   findAll() {
-    return `This action returns all pets`;
+    const pets = this.petRepository.find();
+    return pets;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} pet`;
+  findOne(petId: number) {
+    const pet = this.petRepository.findOneByOrFail({ petId });
+    return pet;
   }
 
-  update(id: number, updatePetInput: UpdatePetInput) {
-    return `This action updates a #${id} pet`;
+  // update(data) {
+  //   this.petRepository.update<Pet>(data, { where: { id: data.petId } });
+  // }
+
+  remove(petId: number) {
+    return this.petRepository.delete(petId);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} pet`;
+  getOwner(ownerId: number): Promise<Owner> {
+    return this.ownersService.findOne(ownerId);
   }
 }
